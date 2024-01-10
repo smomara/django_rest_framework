@@ -16,7 +16,7 @@ def api_root(request, format=None):
     })
 
 @api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly])
+@permission_classes([permissions.IsAuthenticatedOrReadOnly])
 def snippet_list(request, format=None):
     """
     snippet/
@@ -35,8 +35,8 @@ def snippet_list(request, format=None):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([permissions.IsAuthenticatedOrReadOnly])
+@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
+@permission_classes([permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly])
 def snippet_detail(request, pk, format=None):
     """
     snippet/{id}
@@ -53,8 +53,8 @@ def snippet_detail(request, pk, format=None):
         serializer = SnippetSerializer(snippet, context={'request': request})
         return Response(serializer.data)
     
-    elif request.method == 'PUT':
-        serializer = SnippetSerializer(snippet, data=request.data, context={'request': request})
+    elif request.method in ['PUT', 'PATCH']:
+        serializer = SnippetSerializer(snippet, data=request.data, context={'request': request}, partial=(request.method == 'PATCH'))
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
